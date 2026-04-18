@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L.E.P. — Operation Deep Drift</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #0a1628;
+    --navy2:   #0f1f3d;
+    --navy3:   #1a3a5c;
+    --cyan:    #00bfff;
+    --cyan2:   #0080b0;
+    --cyan3:   #003d5c;
+    --gold:    #c8940a;
+    --gold2:   #f0c040;
+    --gold3:   #3d2a00;
+    --green:   #00ff88;
+    --green2:  #005522;
+    --red:     #ff3b30;
+    --red2:    #660000;
+    --silver:  #c0c8d0;
+    --white:   #f0f4f8;
+    --glow-c:  0 0 12px rgba(0,191,255,0.4);
+    --glow-g:  0 0 12px rgba(200,148,10,0.5);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--silver);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,191,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,191,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Radial glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -30%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80vw;
+    height: 60vw;
+    background: radial-gradient(ellipse, rgba(0,80,140,0.18) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--cyan3);
+    margin-bottom: 36px;
+    animation: fadeDown 0.7s ease both;
+  }
+  .lep-sigil {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--cyan2);
+    margin-bottom: 10px;
+    display: block;
+  }
+  .op-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(22px, 5vw, 38px);
+    font-weight: 900;
+    color: var(--gold2);
+    letter-spacing: 3px;
+    text-shadow: var(--glow-g);
+    line-height: 1.1;
+  }
+  .op-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    margin-top: 8px;
+    opacity: 0.8;
+  }
+  .status-bar {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .status-pip {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .status-pip::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: blink 2s step-end infinite;
+  }
+
+  /* ── SECTION CARDS ── */
+  .card {
+    background: rgba(15,31,61,0.7);
+    border: 1px solid var(--cyan3);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan2), transparent);
+  }
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cyan3);
+  }
+
+  /* ── BRIEFING TEXT ── */
+  .briefing-body p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--silver);
+    margin-bottom: 10px;
+    font-weight: 400;
+  }
+  .briefing-body p:last-child { margin-bottom: 0; }
+  .hl-cyan { color: var(--cyan); font-weight: 600; }
+  .hl-gold { color: var(--gold2); font-weight: 600; }
+  .hl-red  { color: var(--red);  font-weight: 600; }
+
+  /* ── ITEMS GRID ── */
+  .items-header {
+    display: grid;
+    grid-template-columns: 36px 1fr 110px 110px;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--navy3);
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+  .items-header span {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--cyan2);
+    text-transform: uppercase;
+  }
+  .items-header span:nth-child(3),
+  .items-header span:nth-child(4) { text-align: center; }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 36px 1fr 110px 110px;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-bottom-color: rgba(0,191,255,0.08);
+    border-radius: 3px;
+    align-items: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .item-row:hover {
+    background: rgba(0,100,160,0.12);
+    border-color: rgba(0,191,255,0.2);
+  }
+  .item-id {
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--cyan);
+    text-align: center;
+    background: rgba(0,191,255,0.08);
+    padding: 4px;
+    border-radius: 3px;
+  }
+  .item-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--white);
+    letter-spacing: 0.3px;
+  }
+  .rank-input {
+    width: 100%;
+    background: rgba(0,30,60,0.8);
+    border: 1px solid var(--cyan3);
+    border-radius: 3px;
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    text-align: center;
+    padding: 6px 4px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -moz-appearance: textfield;
+  }
+  .rank-input::-webkit-inner-spin-button,
+  .rank-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .rank-input:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: var(--glow-c);
+  }
+  .rank-input.valid   { border-color: rgba(0,255,136,0.5); color: var(--green); }
+  .rank-input.invalid { border-color: rgba(255,59,48,0.5); }
+  .rank-input.dupe    { border-color: var(--gold); color: var(--gold2); }
+
+  /* Individual rank col (lighter style) */
+  .rank-input.indiv {
+    background: rgba(0,20,40,0.5);
+    border-color: rgba(0,191,255,0.2);
+    color: var(--silver);
+  }
+
+  /* ── VALIDATION BAR ── */
+  .validation-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background: rgba(0,20,50,0.6);
+    border: 1px solid rgba(0,191,255,0.15);
+    border-radius: 3px;
+    margin-top: 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+  }
+  .val-label { color: var(--cyan2); letter-spacing: 1px; }
+  .val-chip {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border: 1px solid currentColor;
+  }
+  .val-ok   { color: var(--green); border-color: var(--green); background: rgba(0,255,136,0.08); }
+  .val-warn { color: var(--gold2); border-color: var(--gold);  background: rgba(200,148,10,0.1); }
+  .val-err  { color: var(--red);   border-color: var(--red);   background: rgba(255,59,48,0.08); }
+  .val-count { color: var(--silver); margin-left: auto; }
+
+  /* ── SUBMIT BUTTON ── */
+  .submit-btn {
+    display: block;
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+    background: transparent;
+    border: 2px solid var(--gold);
+    border-radius: 4px;
+    color: var(--gold2);
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+  }
+  .submit-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gold3);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+  .submit-btn:hover::before { transform: scaleX(1); }
+  .submit-btn:hover { box-shadow: var(--glow-g); }
+  .submit-btn span { position: relative; z-index: 1; }
+  .submit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--silver);
+    color: var(--silver);
+  }
+  .submit-btn:disabled::before { display: none; }
+
+  /* ── RESULTS PANEL ── */
+  #results-panel {
+    display: none;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .score-display {
+    text-align: center;
+    padding: 32px 20px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+    border: 2px solid var(--cyan3);
+    background: rgba(10,22,40,0.8);
+    position: relative;
+    overflow: hidden;
+  }
+  .score-display.pass-excellent { border-color: var(--green); box-shadow: 0 0 30px rgba(0,255,136,0.15); }
+  .score-display.pass-good      { border-color: #3399ff; box-shadow: 0 0 30px rgba(51,153,255,0.15); }
+  .score-display.pass-average   { border-color: var(--gold); box-shadow: 0 0 30px rgba(200,148,10,0.15); }
+  .score-display.pass-fair      { border-color: #ff8833; box-shadow: 0 0 30px rgba(255,136,51,0.15); }
+  .score-display.fail-poor      { border-color: var(--red); box-shadow: 0 0 30px rgba(255,59,48,0.15); }
+  .score-display.fail-vpoor     { border-color: #880000; box-shadow: 0 0 30px rgba(136,0,0,0.15); }
+
+  .score-number {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(48px, 12vw, 88px);
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .score-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--silver);
+    margin-bottom: 16px;
+  }
+  .rating-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    border-radius: 2px;
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    border: 1px solid currentColor;
+  }
+  .outcome-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--silver);
+    max-width: 500px;
+    margin: 0 auto 12px;
+    line-height: 1.5;
+  }
+  .lep-verdict {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+  .lep-verdict.pass { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+  .lep-verdict.fail { background: rgba(255,59,48,0.1);  color: var(--red);   border: 1px solid rgba(255,59,48,0.3); }
+
+  /* ── BREAKDOWN TABLE ── */
+  .breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .breakdown-table thead tr {
+    background: var(--navy3);
+  }
+  .breakdown-table th {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--cyan2);
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 400;
+    border-bottom: 1px solid var(--cyan3);
+  }
+  .breakdown-table th.center { text-align: center; }
+  .breakdown-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(0,191,255,0.07);
+    color: var(--silver);
+    font-weight: 400;
+    vertical-align: middle;
+  }
+  .breakdown-table td.center { text-align: center; }
+  .breakdown-table tr:hover td { background: rgba(0,100,160,0.08); }
+
+  .diff-chip {
+    display: inline-block;
+    min-width: 32px;
+    text-align: center;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .diff-0  { background: rgba(0,255,136,0.15); color: var(--green);   border: 1px solid rgba(0,255,136,0.3); }
+  .diff-1  { background: rgba(0,255,136,0.08); color: #66ffbb;        border: 1px solid rgba(0,255,136,0.2); }
+  .diff-2  { background: rgba(200,148,10,0.1); color: var(--gold2);   border: 1px solid rgba(200,148,10,0.3); }
+  .diff-hi { background: rgba(255,59,48,0.1);  color: var(--red);     border: 1px solid rgba(255,59,48,0.3); }
+
+  .cg-rank-cell {
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .cg-rank-high { color: var(--green); }
+  .cg-rank-mid  { color: var(--cyan);  }
+  .cg-rank-low  { color: rgba(255,59,48,0.7); }
+
+  .item-id-sm {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--cyan);
+    background: rgba(0,191,255,0.08);
+    padding: 2px 7px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  /* ── SCORE BANDS REF ── */
+  .bands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .band-cell {
+    padding: 10px 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.06);
+    text-align: center;
+  }
+  .band-score {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+  .band-rating {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .band-pass {
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+  }
+  .band-p { background: rgba(0,255,136,0.1); color: var(--green); }
+  .band-f { background: rgba(255,59,48,0.1);  color: var(--red); }
+
+  .b-excellent { background: rgba(0,100,50,0.2);  border-color: rgba(0,255,136,0.2); color: var(--green); }
+  .b-good      { background: rgba(0,60,130,0.2);  border-color: rgba(51,153,255,0.2); color: #6af; }
+  .b-average   { background: rgba(80,60,0,0.2);   border-color: rgba(200,148,10,0.2); color: var(--gold2); }
+  .b-fair      { background: rgba(100,50,0,0.2);  border-color: rgba(255,136,51,0.2); color: #f93; }
+  .b-poor      { background: rgba(100,10,10,0.2); border-color: rgba(255,59,48,0.2); color: var(--red); }
+  .b-vpoor     { background: rgba(60,0,0,0.3);    border-color: rgba(136,0,0,0.4);   color: #c44; }
+
+  /* ── RESET BUTTON ── */
+  .reset-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px;
+    background: transparent;
+    border: 1px solid var(--cyan3);
+    border-radius: 4px;
+    color: var(--cyan2);
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: var(--glow-c);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding-top: 40px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan3);
+    letter-spacing: 2px;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes blink {
+    0%,100% { opacity:1; }
+    50%      { opacity:0.2; }
+  }
+  @keyframes scoreCount {
+    from { opacity:0; transform:scale(0.7); }
+    to   { opacity:1; transform:scale(1); }
+  }
+  .score-number { animation: scoreCount 0.5s cubic-bezier(.17,.89,.32,1.28) both; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .items-header,
+    .item-row {
+      grid-template-columns: 30px 1fr 80px;
+    }
+    /* Hide individual rank col on small screens */
+    .items-header span:nth-child(3),
+    .item-row .indiv-col { display: none; }
+    .card { padding: 16px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <header>
+    <span class="lep-sigil">⬡ L · E · P · RECON DIVISION ⬡</span>
+    <div class="op-title">OPERATION DEEP DRIFT</div>
+    <div class="op-sub">FIELD AGENT CERTIFICATION — CHALLENGE THREE</div>
+    <div class="status-bar">
+      <span class="status-pip">SYSTEMS ONLINE</span>
+      <span class="status-pip">RESCUE ETA: 36 HRS</span>
+      <span class="status-pip">HULL STATUS: INTACT</span>
+    </div>
+  </header>
+
+  <!-- BRIEFING -->
+  <div class="card" style="animation-delay:0.1s">
+    <div class="card-title">MISSION BRIEFING</div>
+    <div class="briefing-body">
+      <p>Your aquanaut submersible has lost power in the <span class="hl-cyan">deep currents of the Lower Elements ocean</span>. Engine thrust is zero. You are <span class="hl-red">drifting</span>.</p>
+      <p>A distress signal has been sent — but rescue is <span class="hl-red">at minimum 36 hours away</span>. Fifteen items have been salvaged undamaged. You also have a serviceable rubber life raft with oars. The total contents of all survivors' pockets are several books of matches and five one-dollar bills.</p>
+      <p>Rank all <span class="hl-gold">15 items from 1 (most critical) to 15 (least critical)</span> as a group in full consensus. Your score will be calculated and your result revealed when you submit.</p>
+    </div>
+  </div>
+
+
+  <!-- RANKING FORM -->
+  <div class="card" style="animation-delay:0.2s">
+    <div class="card-title">SALVAGE INVENTORY — ENTER GROUP RANKINGS</div>
+
+    <div class="items-header">
+      <span>ID</span>
+      <span>Item</span>
+      <span style="text-align:center">Individual</span>
+      <span style="text-align:center">Group Rank ★</span>
+    </div>
+
+    <div id="items-list"></div>
+
+    <div class="validation-bar" id="val-bar">
+      <span class="val-label">STATUS:</span>
+      <span class="val-chip val-warn" id="val-status">AWAITING INPUT</span>
+      <span class="val-count" id="val-count">0 / 15 group ranks entered</span>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" disabled onclick="calculateScore()">
+      <span>⬡ SUBMIT FOR SCORING ⬡</span>
+    </button>
+  </div>
+
+  <!-- RESULTS (hidden until scored) -->
+  <div id="results-panel">
+
+    <div class="card">
+      <div class="card-title">SCORING COMPLETE — MISSION RESULT</div>
+      <div id="score-display-wrap"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">ITEM-BY-ITEM BREAKDOWN</div>
+      <table class="breakdown-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Item</th>
+            <th class="center">Your Rank</th>
+            <th class="center">CG Rank</th>
+            <th class="center">Difference</th>
+          </tr>
+        </thead>
+        <tbody id="breakdown-body"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" style="text-align:right;padding:12px;font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--cyan2);border-top:1px solid var(--cyan3);">TOTAL SCORE</td>
+            <td class="center" style="border-top:1px solid var(--cyan3);padding:12px;">
+              <span id="total-score-cell" class="diff-chip" style="font-size:16px;min-width:48px;"></span>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <button class="reset-btn" onclick="resetForm()">↺ RESET — NEW ATTEMPT</button>
+  </div>
+
+  <footer>
+    L.E.P. RECON DIVISION &nbsp;•&nbsp; FOWL MANOR OPERATION &nbsp;•&nbsp; COMMANDER ROOT AUTHORISED
+  </footer>
+</div>
+
+<script>
+// ── OFFICIAL US COAST GUARD DATA ──────────────────────────────────────────
+const ITEMS = [
+  { id:'A', name:'Sextant',                                     cgRank:15 },
+  { id:'B', name:'Five-gallon can of water',                    cgRank:3  },
+  { id:'C', name:'Small transistor radio',                      cgRank:12 },
+  { id:'D', name:'Twenty square feet of opaque plastic',        cgRank:5  },
+  { id:'E', name:'Shark repellent',                             cgRank:10 },
+  { id:'F', name:'Shaving mirror',                              cgRank:1  },
+  { id:'G', name:'Mosquito netting',                            cgRank:14 },
+  { id:'H', name:'Fishing kit',                                 cgRank:7  },
+  { id:'I', name:'Two-gallon can of oil/gas mixture',           cgRank:2  },
+  { id:'J', name:'Maps of the Pacific Ocean',                   cgRank:13 },
+  { id:'K', name:'Fifteen feet of nylon rope',                  cgRank:8  },
+  { id:'L', name:'One case of U.S. Army C-Rations',            cgRank:4  },
+  { id:'M', name:'One quart of 160-proof Puerto Rican rum',     cgRank:11 },
+  { id:'N', name:'Coast Guard seat cushion (flotation device)', cgRank:9  },
+  { id:'O', name:'Two boxes of chocolate bars',                 cgRank:6  },
+];
+
+const BANDS = [
+  { min:0,  max:25,  rating:'EXCELLENT', outcome:'You demonstrated great survival skills. Rescued!',
+    lep:'Commander Root is impressed. Full LEP certification granted — case files released.',
+    cls:'pass-excellent', scoreColor:'var(--green)', pass:true },
+  { min:26, max:32,  rating:'GOOD',      outcome:'Above average results. Good survival skills. Rescued!',
+    lep:'Solid field instincts. LEP certified — case files released.',
+    cls:'pass-good', scoreColor:'#3399ff', pass:true },
+  { min:33, max:45,  rating:'AVERAGE',   outcome:'Seasick, hungry and tired. Rescued!',
+    lep:'You made it. LEP certified — additional field training recommended.',
+    cls:'pass-average', scoreColor:'var(--gold2)', pass:true },
+  { min:46, max:55,  rating:'FAIR',      outcome:'Dehydrated and barely alive. It was tough, but rescued!',
+    lep:'The raft arrives just in time. Conditional LEP certification — mandatory debrief required.',
+    cls:'pass-fair', scoreColor:'#ff8833', pass:true },
+  { min:56, max:70,  rating:'POOR',      outcome:'Rescued, but only just in time!',
+    lep:'Commander Root is not pleased. No certification — regroup and re-attempt.',
+    cls:'fail-poor', scoreColor:'var(--red)', pass:false },
+  { min:71, max:999, rating:'VERY POOR', outcome:'Your empty raft washes ashore weeks after the search is called off.',
+    lep:'Challenge failed. Full group debrief required before re-attempt.',
+    cls:'fail-vpoor', scoreColor:'#cc3333', pass:false },
+];
+
+// ── BUILD ITEM ROWS ────────────────────────────────────────────────────────
+const list = document.getElementById('items-list');
+
+ITEMS.forEach((item, idx) => {
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `
+    <div class="item-id">${item.id}</div>
+    <div class="item-name">${item.name}</div>
+    <div class="indiv-col">
+      <input class="rank-input indiv" type="number" min="1" max="15"
+             id="indiv-${item.id}" placeholder="—"
+             aria-label="Individual rank for ${item.name}" />
+    </div>
+    <div>
+      <input class="rank-input" type="number" min="1" max="15"
+             id="group-${item.id}" placeholder="1-15"
+             aria-label="Group rank for ${item.name}"
+             oninput="onGroupInput()" />
+    </div>
+  `;
+  row.style.animationDelay = (0.22 + idx * 0.03) + 's';
+  row.style.animation = 'fadeUp 0.4s ease both';
+  list.appendChild(row);
+});
+
+// ── VALIDATION ────────────────────────────────────────────────────────────
+function getGroupRanks() {
+  return ITEMS.map(item => {
+    const val = parseInt(document.getElementById('group-' + item.id).value);
+    return isNaN(val) ? null : val;
+  });
+}
+
+function onGroupInput() {
+  const ranks = getGroupRanks();
+  const entered = ranks.filter(r => r !== null);
+  const valid   = entered.filter(r => r >= 1 && r <= 15);
+  const dupes   = findDupes(ranks);
+  const complete = valid.length === 15 && dupes.size === 0;
+
+  // Style each input
+  ITEMS.forEach((item, i) => {
+    const inp = document.getElementById('group-' + item.id);
+    inp.classList.remove('valid','invalid','dupe');
+    if (ranks[i] === null) return;
+    if (ranks[i] < 1 || ranks[i] > 15) { inp.classList.add('invalid'); return; }
+    if (dupes.has(i)) { inp.classList.add('dupe'); return; }
+    inp.classList.add('valid');
+  });
+
+  // Update validation bar
+  const statusEl = document.getElementById('val-status');
+  const countEl  = document.getElementById('val-count');
+  countEl.textContent = valid.length + ' / 15 group ranks entered';
+
+  statusEl.className = 'val-chip';
+  if (complete) {
+    statusEl.classList.add('val-ok');
+    statusEl.textContent = 'READY TO SUBMIT';
+  } else if (dupes.size > 0) {
+    statusEl.classList.add('val-warn');
+    statusEl.textContent = 'DUPLICATE RANKS DETECTED';
+  } else if (entered.some(r => r < 1 || r > 15)) {
+    statusEl.classList.add('val-err');
+    statusEl.textContent = 'VALUES MUST BE 1–15';
+  } else {
+    statusEl.classList.add('val-warn');
+    statusEl.textContent = valid.length === 0 ? 'AWAITING INPUT' : 'IN PROGRESS';
+  }
+
+  document.getElementById('submit-btn').disabled = !complete;
+}
+
+function findDupes(ranks) {
+  const seen = new Map();
+  const dupeIdx = new Set();
+  ranks.forEach((r, i) => {
+    if (r === null) return;
+    if (seen.has(r)) { dupeIdx.add(i); dupeIdx.add(seen.get(r)); }
+    else seen.set(r, i);
+  });
+  return dupeIdx;
+}
+
+// ── CALCULATE & DISPLAY ───────────────────────────────────────────────────
+function calculateScore() {
+  const ranks = getGroupRanks();
+  let total = 0;
+  const diffs = ITEMS.map((item, i) => {
+    const diff = Math.abs(ranks[i] - item.cgRank);
+    total += diff;
+    return { item, groupRank: ranks[i], diff };
+  });
+
+  const band = BANDS.find(b => total >= b.min && total <= b.max);
+
+  // ── Score display ──
+  const wrap = document.getElementById('score-display-wrap');
+  wrap.innerHTML = `
+    <div class="score-display ${band.cls}">
+      <div class="score-label">TOTAL SCORE</div>
+      <div class="score-number" style="color:${band.scoreColor}">${total}</div>
+      <div class="rating-badge" style="color:${band.scoreColor};border-color:${band.scoreColor}">${band.rating}</div>
+      <div class="outcome-text">${band.outcome}</div>
+      <div class="lep-verdict ${band.pass ? 'pass' : 'fail'}">
+        ${band.pass ? '⬡ LEP CERTIFIED — ' : '✕ NOT CERTIFIED — '}${band.lep}
+      </div>
+    </div>
+  `;
+
+  // ── Breakdown table ──
+  const tbody = document.getElementById('breakdown-body');
+  tbody.innerHTML = '';
+  diffs.forEach(({ item, groupRank, diff }) => {
+    const tier = item.cgRank <= 5 ? 'high' : item.cgRank <= 10 ? 'mid' : 'low';
+    const rankClass = tier === 'high' ? 'cg-rank-high' : tier === 'mid' ? 'cg-rank-mid' : 'cg-rank-low';
+    const diffClass = diff === 0 ? 'diff-0' : diff === 1 ? 'diff-1' : diff <= 3 ? 'diff-2' : 'diff-hi';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="center"><span class="item-id-sm">${item.id}</span></td>
+      <td>${item.name}</td>
+      <td class="center" style="font-family:'Share Tech Mono',monospace;color:var(--silver)">${groupRank}</td>
+      <td class="center"><span class="cg-rank-cell ${rankClass}">${item.cgRank}</span></td>
+      <td class="center"><span class="diff-chip ${diffClass}">${diff}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Total score cell
+  const totalClass = total <= 25 ? 'diff-0' : total <= 45 ? 'diff-2' : 'diff-hi';
+  document.getElementById('total-score-cell').textContent = total;
+  document.getElementById('total-score-cell').className = 'diff-chip ' + totalClass;
+
+  // Show results
+  const panel = document.getElementById('results-panel');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Disable form
+  document.getElementById('submit-btn').disabled = true;
+  document.querySelectorAll('.rank-input').forEach(inp => inp.disabled = true);
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────
+function resetForm() {
+  document.querySelectorAll('.rank-input').forEach(inp => {
+    inp.value = '';
+    inp.disabled = false;
+    inp.classList.remove('valid','invalid','dupe');
+  });
+  document.getElementById('results-panel').style.display = 'none';
+  document.getElementById('submit-btn').disabled = true;
+
+  const statusEl = document.getElementById('val-status');
+  statusEl.className = 'val-chip val-warn';
+  statusEl.textContent = 'AWAITING INPUT';
+  document.getElementById('val-count').textContent = '0 / 15 group ranks entered';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
